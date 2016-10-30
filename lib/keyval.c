@@ -6,22 +6,25 @@
 
 void keyval_init(KeyVal *kv, void *key, void *val,
                  String * (*key_to_string)(void *), String * (*val_to_string)(void *),
-                 void (*free_key_string)(String *), void (*free_val_string)(String *)) {
+                 void (*free_key_string)(String *), void (*free_val_string)(String *),
+                 int (*cmp)(const void *, const void *)) {
   kv->key = key;
   kv->val = val;
   kv->key_to_string = key_to_string;
   kv->val_to_string = val_to_string;
   kv->free_key_string = free_key_string;
   kv->free_val_string = free_val_string;
+  kv->cmp = cmp;
 }
 
 
 KeyVal * keyval_alloc(void *key, void *val,
                       String * (*key_to_string)(void *), String * (*val_to_string)(void *),
-                      void (*free_key_string)(String *), void (*free_val_string)(String *)) {
+                      void (*free_key_string)(String *), void (*free_val_string)(String *),
+                      int (*cmp)(const void *, const void *)) {
   KeyVal *kv = malloc(sizeof(KeyVal));
   keyval_init(kv, key, val, key_to_string, val_to_string,
-              free_key_string, free_val_string);
+              free_key_string, free_val_string, cmp);
   return kv;
 }
 
@@ -68,11 +71,22 @@ void keyval_free_val_string(KeyVal *kv, String *s) {
     kv->free_val_string(s);
 }
 
+KeyVal * as_keyval_const(const void *kv) {
+  return (KeyVal *)kv;
+}
+
+int keyval_cmp(const void *a, const void *b) {
+  KeyVal *akv = as_keyval_const(a);
+  KeyVal *bkv = as_keyval_const(b);
+  return akv->cmp(akv->key, bkv->key);
+}
+
 String * keyval_to_string(KeyVal *kv) {
   String *key_str = keyval_key_to_string(kv);
   String *sep = string_from_str(":");
   String *val_str = keyval_val_to_string(kv);
-  String *str = string_alloc_str(string_len(key_str) + string_len(val_str) + 1);
+  String *str = string_alloc_str(string_len(key_str) + string_len(val_str) +
+                                 string_len(sep));
   string_copy_to(str, key_str, 0);
   string_copy_to(str, sep, string_len(key_str));
   string_copy_to(str, val_str, string_len(key_str) + string_len(sep));

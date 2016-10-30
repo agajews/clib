@@ -10,15 +10,18 @@ typedef struct KeyVal_ {
   String * (*val_to_string)(void *val);
   void (*free_key_string)(String *s);
   void (*free_val_string)(String *s);
+  int (*cmp)(const void *, const void *);
 } KeyVal;
 
 void keyval_init(KeyVal *kv, void *key, void *val,
                  String * (*key_to_string)(void *), String * (*val_to_string)(void *),
-                 void (*free_key_string)(String *), void (*free_val_string)(String *));
+                 void (*free_key_string)(String *), void (*free_val_string)(String *),
+                 int (*cmp)(const void *, const void *));
 
 KeyVal * keyval_alloc(void *key, void *val,
                       String * (*key_to_string)(void *), String * (*val_to_string)(void *),
-                      void (*free_key_string)(String *), void (*free_val_string)(String *));
+                      void (*free_key_string)(String *), void (*free_val_string)(String *),
+                      int (*cmp)(const void *, const void *));
 
 void keyval_free(KeyVal *kv);
 
@@ -39,6 +42,10 @@ String * keyval_val_to_string(KeyVal *kv);
 void keyval_free_key_string(KeyVal *kv, String *s);
 
 void keyval_free_val_string(KeyVal *kv, String *s);
+
+KeyVal * as_keyval_const(const void *kv);
+
+int keyval_cmp(const void *a, const void *b);
 
 String * keyval_to_string(KeyVal *kv);
 

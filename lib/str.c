@@ -5,6 +5,7 @@
 #include "str.h"
 #include "list.h"
 #include "listi.h"
+#include "iter.h"
 
 void string_init(String *s) {
   s->str = NULL;
@@ -229,7 +230,7 @@ String * string_remove(String *s, String *r) {
 
 List * string_split(String *s, String *split) {
   int j = 0;
-  List *strs = list_alloc(string_to_string, NULL, string_free_void);
+  List *strs = list_alloc(string_to_string, NULL, string_free_void, string_cmp_void);
   while (j + string_len(split) <= string_len(s)) {
     while (j + string_len(split) <= string_len(s) &&
            string_eq_sub(s, split, j, j + string_len(split)))
@@ -248,22 +249,28 @@ List * string_split(String *s, String *split) {
   return strs;
 }
 
-String * string_join(ListI *l, String *s) {
-  if (listi_len(l) < 1)
+String * string_join(ListI *list, String *sep) {
+  if (listi_len(list) < 1)
     return string_alloc();
-  int len = string_len(s) * (listi_len(l) - 1);
-  for (int i = 0; i < listi_len(l); i++)
-    len += string_len(as_string(listi_get(l, i)));
+  int len = string_len(sep) * (listi_len(list) - 1);
+  IterState *is = iterstate_alloc();
+  String *curr;
+  while ((curr = listi_iter(list, is)) != NULL)
+    len += string_len(curr);
+  iterstate_free(is);
   String *str = string_alloc_str(len);
   int j = 0;
-  for (int i = 0; i < listi_len(l) - 1; i++) {
-    String *curr = as_string(listi_get(l, i));
+  is = iterstate_alloc();
+  curr = listi_iter(list, is);
+  while (curr != NULL) {
     string_copy_to(str, curr, j);
     j += string_len(curr);
-    string_copy_to(str, s, j);
-    j += string_len(s);
+    curr = listi_iter(list, is);
+    if (curr != NULL) {  // not the last time
+      string_copy_to(str, sep, j);
+      j += string_len(sep);
+    }
   }
-  String *curr = as_string(listi_get(l, listi_len(l) - 1));
-  string_copy_to(str, curr, j);
+  iterstate_free(is);
   return str;
 }

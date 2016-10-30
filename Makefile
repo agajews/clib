@@ -5,14 +5,16 @@ SDIR=$(CLIB)/lib
 ODIR=$(CLIB)/obj
 HDIR=$(CLIB)/libh
 INC=-I$(HDIR)
-_OBJS = list.o listi.o numer.o str.o tree.o keyval.o
+_OBJS = list.o listi.o stack.o iter.o \
+array.o str.o tree.o rbtree.o keyval.o \
+numer.o file.o
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
 clib: $(OBJS)
 
-$(ODIR)/%.o: $(SDIR)/%.c
+$(ODIR)/%.o: $(SDIR)/%.c $(HDIR)/%.h
 	$(CC) -c $(INC) -o $@ $< $(CFLAGS)
 
-.PHONY: clean
-clean:
+.PHONY: cleanlib
+cleanlib:
 	rm -f $(ODIR)/*.o

@@ -172,8 +172,10 @@ int tree_insert_node_at(Tree *tree, Node *node, Node *old_node) {
   } else if (cmp_val < 0) {
     old_node->left = node;
     old_node->right = tmp_node;
-  } else
-    return 1;  // duplicate key
+  } else {  // duplicate key
+    tree_free_node(tmp_node);
+    return 1;
+  }
   return 0;
 }
 
@@ -193,7 +195,10 @@ int tree_insert(Tree *tree, void *key, void *data) {
   node->key = key;
   tree_set_leaf(node);
   tree_set_data(node, data);
-  return tree_insert_node(tree, node);
+  int ret_val = tree_insert_node(tree, node);
+  if (ret_val == 1)
+    tree_free_node(node);
+  return ret_val;
 }
 
 int tree_update_node(Tree *tree, Node *node, void *data, void *old_data) {
@@ -215,13 +220,13 @@ int tree_update(Tree *tree, void *key, void *data, void *old_data) {
 
 void * tree_remove_node_at(Tree *tree, Node *node, Node *parent, void *old_key) {
   Node *sibling;
-  if (node == parent->right) {
+  if (node == parent->right)
     sibling = parent->left;
-    parent->key = sibling->key;
-  } else
+  else
     sibling = parent->right;
-  parent->left = tree_get_data(sibling);
-  parent->right = NULL;
+  parent->key = sibling->key;
+  parent->left = sibling->left;
+  parent->right = sibling->right;
   void *data = tree_get_data(node);
   if (old_key != NULL)
     *((int **)old_key) = node->key;
@@ -266,7 +271,8 @@ void tree_node_in_order(Tree *tree, Node *node, List *res) {
   if (tree_is_leaf(node)) {
     KeyVal *kv = keyval_alloc(node->key, tree_get_data(node),
                               tree->key_to_string, tree->data_to_string,
-                              tree->free_key_string, tree->free_data_string);
+                              tree->free_key_string, tree->free_data_string,
+                              tree->cmp);
     list_append(res, kv);
     return;
   }
@@ -275,7 +281,8 @@ void tree_node_in_order(Tree *tree, Node *node, List *res) {
 }
 
 List * tree_in_order(Tree *tree) {
-  List *res = list_alloc(keyval_to_string_void, string_free_str, keyval_free_void);
+  List *res = list_alloc(keyval_to_string_void, string_free_str, keyval_free_void,
+                         keyval_cmp);
   if (tree->root != NULL)
     tree_node_in_order(tree, tree->root, res);
   return res;

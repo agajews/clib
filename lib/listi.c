@@ -8,7 +8,9 @@ void listi_init(ListI *l, void *list, void * (*get)(void *, int),
                 void * (*update)(void *, void *, int),
                 int (*len)(void *),
                 String * (*to_string)(void *),
-                void (*free_string)(String *)) {
+                void (*free_string)(String *),
+                void * (*iter_from)(void *, IterState *, int),
+                int (*cmp)(const void *, const void *)) {
   l->list = list;
   l->get = get;
   l->remove = remove;
@@ -16,6 +18,8 @@ void listi_init(ListI *l, void *list, void * (*get)(void *, int),
   l->len = len;
   l->to_string = to_string;
   l->free_string = free_string;
+  l->iter_from = iter_from;
+  l->cmp = cmp;
 }
 
 ListI * listi_alloc(void *list, void * (*get)(void *, int),
@@ -23,9 +27,11 @@ ListI * listi_alloc(void *list, void * (*get)(void *, int),
                     void * (*update)(void *, void *, int),
                     int (*len)(void *),
                     String * (*to_string)(void *),
-                    void (*free_string)(String *)) {
+                    void (*free_string)(String *),
+                    void * (*iter_from)(void *, IterState *, int),
+                    int (*cmp)(const void *, const void *)) {
   ListI *l = malloc(sizeof(ListI));
-  listi_init(l, list, get, remove, update, len, to_string, free_string);
+  listi_init(l, list, get, remove, update, len, to_string, free_string, iter_from, cmp);
   return l;
 }
 
@@ -35,6 +41,14 @@ void listi_free(ListI *l) {
 
 void * listi_get(ListI *l, int idx) {
   return l->get(l->list, idx);
+}
+
+void * listi_iter_from(ListI *l, IterState *is, int start) {
+  return l->iter_from(l->list, is, start);
+}
+
+void * listi_iter(ListI *l, IterState *is) {
+  return l->iter_from(l->list, is, 0);
 }
 
 void * listi_remove(ListI *l, int idx) {
@@ -85,4 +99,25 @@ String * listi_to_string(ListI *l) {
   string_set_char(str, ']', j++);
   string_set_null(str);
   return str;
+}
+
+int listi_cmp(ListI *l, const void *a, const void *b) {
+  return l->cmp(a, b);
+}
+
+int listi_bin_search(ListI *l, void *key) {
+  int lo = 0, hi = listi_len(l);
+  int mid = lo + (hi - lo) / 2;
+  int cmp_val = listi_cmp(l, key, listi_get(l, mid));
+  while (cmp_val != 0) {
+    if (cmp_val < 0)
+      hi = mid;
+    else if (cmp_val > 0)
+      lo = mid;
+    int mid = lo + (hi - lo) / 2;
+    int cmp_val = listi_cmp(l, key, listi_get(l, mid));
+    if (lo == hi)
+      break;
+  }
+  return mid;
 }
