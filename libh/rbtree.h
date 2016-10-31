@@ -77,6 +77,8 @@ RBNode * rbtree_uncle(RBNode *node);
 
 RBNode * rbtree_sibling(RBNode *node);
 
+int rbtree_color(RBNode *node);
+
 void rbtree_insert_case5(RBNode *node);
 
 void rbtree_insert_case4(RBNode *node);

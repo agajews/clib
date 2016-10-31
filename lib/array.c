@@ -79,11 +79,11 @@ void * dblarray_set_void(void *a, void *data, int i) {
   return NULL;
 }
 
-double * dblarray_iter(DblArray *a, IterState *is) {
+double * dblarray_iter_from(DblArray *a, IterState *is, int start) {
   if (!iterstate_started(is)) {
     int *i = malloc(sizeof(int));
     iterstate_set(is, i);
-    *i = 0;
+    *i = start;
   }
   int *i = as_int_ptr(iterstate_state(is));
   if (*i == a->len)
@@ -91,14 +91,54 @@ double * dblarray_iter(DblArray *a, IterState *is) {
   return a->arr + (*i)++;
 }
 
+void * dblarray_iter_from_void(void *a, IterState *is, int start) {
+  return dblarray_iter_from(as_dblarray(a), is, start);
+}
+
+double * dblarray_iter(DblArray *a, IterState *is) {
+  return dblarray_iter_from(a, is, 0);
+}
+
 void * dblarray_iter_void(void *a, IterState *is) {
-  return dblarray_iter(as_dblarray(a), is);
+  return dblarray_iter_from_void(a, is, 0);
 }
 
 ListI * dblarray_to_listi(DblArray *a) {
   ListI *li = listi_alloc(a, dblarray_get_void, NULL, dblarray_set_void,
                           dblarray_len_void, double_to_string_void,
                           string_free_str,
-                          dblarray_iter_void, double_cmp);
+                          dblarray_iter_from_void, double_cmp);
   return li;
+}
+
+double dblarray_min(DblArray *a) {
+  double min = dblarray_get(a, 0);
+  for (int i = 1; i < dblarray_len(a); i++)
+    min = double_min(min, dblarray_get(a, i));
+  return min;
+}
+
+double dblarray_max(DblArray *a) {
+  double max = dblarray_get(a, 0);
+  for (int i = 1; i < dblarray_len(a); i++)
+    max = double_max(max, dblarray_get(a, i));
+  return max;
+}
+
+int dblarray_bin_search(DblArray *a, double key) {
+  ListI *li = dblarray_to_listi(a);
+  int i = listi_bin_search(li, &key);
+  listi_free(li);
+  return i;
+}
+
+void dblarray_sort(DblArray *a) {
+  qsort(a->arr, a->len, sizeof(double), double_cmp);
+}
+
+String * dblarray_to_string(DblArray *a) {
+  ListI *li = dblarray_to_listi(a);
+  String *s = listi_to_string(li);
+  listi_free(li);
+  return s;
 }

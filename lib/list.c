@@ -23,10 +23,14 @@ List * list_alloc(String * (*to_string)(void *), void (*free_string)(String *),
   return l;
 }
 
+List * list_bare_alloc() {
+  return list_alloc(NULL, NULL, NULL, NULL);
+}
+
 ListI * list_to_listi(List *l) {
   return listi_alloc(l, list_get_void, list_remove_void,
                      list_update_void, list_len_void,
-                     l->to_string, l->free_string, list_iter_void, l->cmp);
+                     l->to_string, l->free_string, list_iter_from_void, l->cmp);
 }
 
 void list_elem_init(ListElem *e) {
@@ -102,6 +106,10 @@ void * list_iter_from(List *l, IterState *is, int start) {
   if (curr == NULL)
     return NULL;
   return list_data(curr);
+}
+
+void * list_iter_from_void(void *l, IterState *is, int start) {
+  return list_iter_from(as_list(l), is, start);
 }
 
 void * list_iter(List *l, IterState *is) {

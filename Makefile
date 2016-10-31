@@ -7,7 +7,7 @@ HDIR=$(CLIB)/libh
 INC=-I$(HDIR)
 _OBJS = list.o listi.o stack.o iter.o \
 array.o str.o tree.o rbtree.o keyval.o \
-numer.o file.o
+numer.o file.o tuple.o
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
 clib: $(OBJS)

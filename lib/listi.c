@@ -106,7 +106,7 @@ int listi_cmp(ListI *l, const void *a, const void *b) {
 }
 
 int listi_bin_search(ListI *l, void *key) {
-  int lo = 0, hi = listi_len(l);
+  int lo = 0, hi = listi_len(l) - 1;
   int mid = lo + (hi - lo) / 2;
   int cmp_val = listi_cmp(l, key, listi_get(l, mid));
   while (cmp_val != 0) {
@@ -114,10 +114,37 @@ int listi_bin_search(ListI *l, void *key) {
       hi = mid;
     else if (cmp_val > 0)
       lo = mid;
-    int mid = lo + (hi - lo) / 2;
-    int cmp_val = listi_cmp(l, key, listi_get(l, mid));
-    if (lo == hi)
+    mid = lo + (hi - lo) / 2;
+    cmp_val = listi_cmp(l, key, listi_get(l, mid));
+    if (lo == mid)
       break;
   }
+  if (cmp_val != 0)
+    return mid + 1;
   return mid;
 }
+
+ListI * as_listi(void *l) {
+  return (ListI *)l;
+}
+
+/* int listi_sort_cmp(const void *a, const void *b) { */
+/*   int ai = *((int *)a); */
+/*   int bi = *((int *)b); */
+/*   ListI *li = as_listi(l); */
+/*   return listi_cmp(li, listi_get(li, ai), listi_get(li, bi)); */
+/* } */
+
+/* void listi_sort(ListI *l) { */
+/*   int **elems = malloc(listi_len(l) * sizeof(void *));  // actually is void ** */
+/*   int *indices = malloc(listi_len(l) * sizeof(int)); */
+/*   for (int i = 0; i < listi_len(l); i++) { */
+/*     indices[i] = i; */
+/*     elems[i] = listi_get(l, i); */
+/*   } */
+/*   qsort_r(indices, listi_len(l), sizeof(int), listi_sort_cmp, l); */
+/*   for (int i = 0; i < listi_len(l); i++) */
+/*     listi_update(l, elems[indices[i]], i); */
+/*   free(indices); */
+/*   free(elems); */
+/* } */

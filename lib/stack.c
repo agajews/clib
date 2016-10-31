@@ -3,12 +3,14 @@
 #include "stack.h"
 #include "list.h"
 
-void stack_init(Stack *s, void (*free_data)(void *)) {
-  return list_init(s, NULL, NULL, free_data);
+void stack_init(Stack *s, void (*free_data)(void *),
+                int (*cmp)(const void *, const void *)) {
+  return list_init(s, NULL, NULL, free_data, cmp);
 }
 
-Stack * stack_alloc(void (*free_data)(void *)) {
-  return list_alloc(NULL, NULL, free_data);
+Stack * stack_alloc(void (*free_data)(void *),
+                    int (*cmp)(const void *, const void *)) {
+  return list_alloc(NULL, NULL, free_data, cmp);
 }
 
 void stack_free(Stack *s) {

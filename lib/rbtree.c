@@ -148,23 +148,51 @@ int rbtree_find(RBTree *tree, void *key, void *data) {
 void rbtree_rotate_left(RBNode *node) {
   RBNode *old_left = node->left;
   void *old_key = node->key;
+  void *old_data = node->data;
+  int old_color = node->color;
   node->left = node->right;
+  if (node->left != NULL)
+    node->left->parent = node;
   node->key = node->right->key;
+  node->data = node->right->data;
+  node->color = node->right->color;
   node->right = node->left->right;
+  if (node->right != NULL)
+    node->right->parent = node;
   node->left->right = node->left->left;
+  if (node->left->right != NULL)
+    node->left->right->parent = node->left;
   node->left->left = old_left;
+  if (node->left->left != NULL)
+    node->left->left->parent = node->left;
   node->left->key = old_key;
+  node->left->data = old_data;
+  node->left->color = old_color;
 }
 
 void rbtree_rotate_right(RBNode *node) {
   RBNode *old_right = node->right;
   void *old_key = node->key;
+  void *old_data = node->data;
+  int old_color = node->color;
   node->right = node->left;
+  if (node->right != NULL)
+    node->right->parent = node;
   node->key = node->left->key;
-  node->left = node->left->right;
+  node->data = node->left->data;
+  node->color = node->left->color;
+  node->left = node->right->left;
+  if (node->left != NULL)
+    node->left->parent = node;
   node->right->left = node->right->right;
+  if (node->right->left != NULL)
+    node->right->left->parent = node->right;
   node->right->right = old_right;
+  if (node->right->right != NULL)
+    node->right->right->parent = node->right;
   node->right->key = old_key;
+  node->right->data = old_data;
+  node->right->color = old_color;
 }
 
 RBNode * rbtree_grandparent(RBNode *node) {
@@ -194,7 +222,14 @@ RBNode * rbtree_sibling(RBNode *node) {
   return NULL;
 }
 
+int rbtree_color(RBNode *node) {
+  if (node == NULL)
+    return 0;
+  return node->color;
+}
+
 void rbtree_insert_case5(RBNode *node) {
+  printf("Case 5\n");
   RBNode *grandparent = rbtree_grandparent(node);
   node->parent->color = 0;
   grandparent->color = 1;
@@ -205,6 +240,7 @@ void rbtree_insert_case5(RBNode *node) {
 }
 
 void rbtree_insert_case4(RBNode *node) {
+  printf("Case 4\n");
   RBNode *grandparent = rbtree_grandparent(node);
   RBNode *next = node;
   if (node == node->parent->right && node->parent == grandparent->left) {
@@ -218,9 +254,12 @@ void rbtree_insert_case4(RBNode *node) {
 }
 
 void rbtree_insert_case3(RBNode *node) {
+  printf("Case 3\n");
   RBNode *uncle = rbtree_uncle(node);
+  printf("uncle: %d\n", uncle);
   if (uncle != NULL && uncle->color == 1) {
     node->parent->color = 0;
+    uncle->color = 0;
     rbtree_grandparent(node)->color = 1;
     rbtree_insert_case1(rbtree_grandparent(node));
     return;
@@ -229,12 +268,14 @@ void rbtree_insert_case3(RBNode *node) {
 }
 
 void rbtree_insert_case2(RBNode *node) {
+  printf("Case 2\n");
   if (node->parent->color == 0)
     return;
   rbtree_insert_case3(node);
 }
 
 void rbtree_insert_case1(RBNode *node) {
+  printf("Case 1\n");
   if (node->parent == NULL && node->color == 1)  // root is red
     node->color = 0;
   else
@@ -262,6 +303,18 @@ int rbtree_insert_node(RBTree *tree, RBNode *node) {
   }
   rbtree_find_node(tree, node->key, &old_node);
   node->parent = old_node;
+  if (tree->root != NULL) {
+    printf("parent: %s\n", string_str(node->parent->key));
+    if (node->parent->parent != NULL)
+      printf("grandparent: %s\n", string_str(node->parent->parent->key));
+    printf("root: %s\n", string_str(tree->root->key));
+    if (tree->root->left != NULL)
+      printf("root->left: %s\n", string_str(tree->root->left->key));
+    if (tree->root->right != NULL)
+      printf("root->right: %s\n", string_str(tree->root->right->key));
+    if (rbtree_grandparent(node) != NULL)
+      printf("grandparent: %s\n", string_str(rbtree_grandparent(node)->key));
+  }
   return rbtree_insert_node_at(tree, node, old_node);
 }
 
@@ -272,6 +325,17 @@ int rbtree_insert(RBTree *tree, void *key, void *data) {
   int ret_val = rbtree_insert_node(tree, node);
   if (ret_val == 1)
     rbtree_free_node(node);
+  if (tree->root != NULL) {
+    printf("root: %s\n", string_str(tree->root->key));
+    if (tree->root->left != NULL) {
+      printf("left: %s\n", string_str(tree->root->left->key));
+      printf("left color: %d\n", tree->root->left->color);
+    }
+    if (tree->root->right != NULL) {
+      printf("right: %s\n", string_str(tree->root->right->key));
+      printf("right color: %d\n", tree->root->right->color);
+    }
+  }
   return ret_val;
 }
 
@@ -311,12 +375,12 @@ void rbtree_remove_case6(RBNode *node) {
 void rbtree_remove_case5(RBNode *node) {
   RBNode *sibling = rbtree_sibling(node);
   if (node == node->parent->left &&
-      sibling->left->color == 1 && sibling->right->color == 0) {
+      rbtree_color(sibling->left) == 1 && rbtree_color(sibling->right) == 0) {
     sibling->color = 1;
     sibling->left->color = 0;
     rbtree_rotate_right(sibling);
   } else if (node == node->parent->right &&
-             sibling->left->color == 0 && sibling->right->color == 1) {
+             rbtree_color(sibling->left) == 0 && rbtree_color(sibling->right) == 1) {
     sibling->color = 1;
     sibling->right->color =0;
     rbtree_rotate_left(sibling);
@@ -327,7 +391,7 @@ void rbtree_remove_case5(RBNode *node) {
 void rbtree_remove_case4(RBNode *node) {
   RBNode *sibling = rbtree_sibling(node);
   if (node->parent->color == 1 && sibling->color == 0 &&
-      sibling->left->color == 0 && sibling->right->color == 0) {
+      rbtree_color(sibling->left) == 0 && rbtree_color(sibling->right) == 0) {
     sibling->color = 1;
     node->parent->color = 0;
   } else
@@ -337,7 +401,7 @@ void rbtree_remove_case4(RBNode *node) {
 void rbtree_remove_case3(RBNode *node) {
   RBNode *sibling = rbtree_sibling(node);
   if (node->parent->color == 0 && sibling->color == 0 &&
-      sibling->left->color == 0 && sibling->right->color == 0) {
+      rbtree_color(sibling->left) == 0 && rbtree_color(sibling->right) == 0) {
     sibling->color = 1;
     rbtree_remove_case1(node->parent);
   } else
@@ -365,6 +429,20 @@ void rbtree_remove_case1(RBNode *node) {
 }
 
 void * rbtree_remove_node_at(RBTree *tree, RBNode *node, void *old_key) {
+  if (tree->root != NULL) {
+    printf("root: %s\n", string_str(tree->root->key));
+    if (tree->root->left != NULL) {
+      printf("left: %s\n", string_str(tree->root->left->key));
+      printf("left color: %d\n", tree->root->left->color);
+    }
+    if (tree->root->right != NULL) {
+      printf("right: %s\n", string_str(tree->root->right->key));
+      printf("right color: %d\n", tree->root->right->color);
+    }
+  }
+  void *data = rbtree_get_data(node);
+  if (old_key != NULL)
+    *((int **)old_key) = node->key;
   if (node->left == NULL && node->right == NULL) { // no children
     /* node->color = 0; */
     if (node->color == 0)
@@ -375,16 +453,22 @@ void * rbtree_remove_node_at(RBTree *tree, RBNode *node, void *old_key) {
       node->parent->right = NULL;
     rbtree_free_node(node);
   } else if ((node->left == NULL) != (node->right == NULL)) {  // one child
+    printf("One child!\n");
     RBNode *child;
-    if (node->left != NULL && node->right == NULL)  // one child
+    if (node->left != NULL)  // one child
       child = node->left;
-    else if (node->right != NULL && node->left == NULL)
-      child = node->right;
-    if (node == node->parent->left)
-      node->parent->left = child;
     else
-      node->parent->right = child;
-    child->color = 0;
+      child = node->right;
+    if (node->parent == NULL)
+      tree->root = child;
+    else {
+      if (node == node->parent->left)
+        node->parent->left = child;
+      else
+        node->parent->right = child;
+    }
+    child->parent = node->parent;
+    child->color = 0;  // has to have been red
     rbtree_free_node(node);
   } else {  // two children
     RBNode *min = rbtree_min_node(node->right);
@@ -392,9 +476,6 @@ void * rbtree_remove_node_at(RBTree *tree, RBNode *node, void *old_key) {
     node->data = min->data;
     rbtree_remove_node_at(tree, min, NULL);
   }
-  void *data = rbtree_get_data(node);
-  if (old_key != NULL)
-    *((int **)old_key) = node->key;
   return data;
 }
 
@@ -439,14 +520,16 @@ void rbtree_node_in_order(RBTree *tree, RBNode *node, List *res) {
     rbtree_node_in_order(tree, node->left, res);
     KeyVal *kv = keyval_alloc(node->key, rbtree_get_data(node),
                               tree->key_to_string, tree->data_to_string,
-                              tree->free_key_string, tree->free_data_string);
+                              tree->free_key_string, tree->free_data_string,
+                              tree->cmp);
     list_append(res, kv);
     rbtree_node_in_order(tree, node->right, res);
   }
 }
 
 List * rbtree_in_order(RBTree *tree) {
-  List *res = list_alloc(keyval_to_string_void, string_free_str, keyval_free_void);
+  List *res = list_alloc(keyval_to_string_void, string_free_str, keyval_free_void,
+                         keyval_cmp);
   rbtree_node_in_order(tree, tree->root, res);
   return res;
 }

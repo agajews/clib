@@ -28,6 +28,8 @@ void list_init(List *l, String * (*to_string)(void *), void (*free_string)(Strin
 List * list_alloc(String * (*to_string)(void *), void (*free_string)(String *),
                   void (*free_data)(void *), int (*cmp)(const void *, const void *));
 
+List * list_bare_alloc();
+
 ListI * list_to_listi(List *l);
 
 void list_elem_init(ListElem *e);
@@ -45,6 +47,8 @@ void list_free_all(List *l);
 ListElem * list_get_elem(List *l, int idx);
 
 void * list_iter_from(List *l, IterState *is, int start);
+
+void * list_iter_from_void(void *l, IterState *is, int start);
 
 void * list_iter(List *l, IterState *is);
 

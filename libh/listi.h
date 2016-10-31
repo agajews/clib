@@ -59,4 +59,10 @@ int listi_cmp(ListI *l, const void *a, const void *b);
 
 int listi_bin_search(ListI *l, void *key);
 
+ListI * as_listi(void *l);
+
+/* int listi_sort_cmp(const void *a, const void *b, void *l); */
+
+/* void listi_sort(ListI *l); */
+
 #endif

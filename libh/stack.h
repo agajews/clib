@@ -5,9 +5,11 @@ typedef struct List_ List;
 
 typedef List Stack;
 
-void stack_init(Stack *s, void (*free_data)(void *));
+void stack_init(Stack *s, void (*free_data)(void *),
+                int (*cmp)(const void *, const void *));
 
-Stack * stack_alloc(void (*free_data)(void *));
+Stack * stack_alloc(void (*free_data)(void *),
+                    int (*cmp)(const void *, const void *));
 
 void stack_free(Stack *s);
 

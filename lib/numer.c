@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "numer.h"
 #include "str.h"
 
@@ -41,12 +42,37 @@ int double_cmp(const void *a, const void *b) {
   return 0;
 }
 
+double double_max(double a, double b) {
+  if (a > b)
+    return a;
+  return b;
+}
+
+double double_min(double a, double b) {
+  if (a < b)
+    return a;
+  return b;
+}
+
 String * double_to_string(double d) {
   String *str = string_alloc_str(MAX_DOUBLE_STR);
-  snprintf(string_str(str), MAX_DOUBLE_STR * sizeof(char), "%d", d);
+  snprintf(string_str(str), MAX_DOUBLE_STR * sizeof(char), "%f", d);
+  string_len_strlen(str);
   return str;
 }
 
 String * double_to_string_void(void *d) {
   return double_to_string(*((double *)d));
+}
+
+void rand_seed() {
+  srand(time(NULL));
+}
+
+double rand_double() {
+  return (double)rand() / RAND_MAX;
+}
+
+double rand_range(double min, double max) {
+  return min + rand_double() * (max - min);
 }
